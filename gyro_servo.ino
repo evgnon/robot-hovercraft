@@ -43,6 +43,7 @@ void setup() {
 void loop() {
   updateAccel();
   updateGyro();
+  LEDL();
   moveServo();
   printCurrent();
   delay(1000);
@@ -194,6 +195,16 @@ void moveServo() {
   // check if yaw is within the range -90 <= yaw <= 90
   if (-90 <= yaw <= 90) {
     hover_servo.write(convert_yaw);
+  }
+}
+
+// control LED_BUILTIN = LEDL
+void LEDL() {
+  if (yaw < -90 || yaw > 90) {
+    digitalWrite(LED_BUILTIN, HIGH);
+  }
+  else {
+    digitalWrite(LED_BUILTIN, LOW);
   }
 }
 
