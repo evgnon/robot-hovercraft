@@ -158,8 +158,9 @@ void loop() {
   _delay_ms(500);
   
 }
-uint16_t get_gp2d12 (uint16_t value) {
+uint16_t adcToCm (uint16_t x) {
     // This formula was found at: https://wiki.dfrobot.com/Sharp_GP2Y0A21_Distance_Sensor__10-80cm___SKU_SEN0014_
     // I think it's in mm so  /10
-    return ((67870.0 / (value - 3.0)) - 40.0)/100;
+    return  2.54 /( (1.983773565816502e-04 + (7.131755812731296e-04) * x + (1.538397242051181e-03) * x ^ 2 - (3.189883571136305e-04) * x ^ 3 + (2.894171139886596
+e-05) * x ^ 4 - (1.204350042380299e-06) * x ^ 5 + (1.906621854559469e-08) * x ^ 6) )
 }
