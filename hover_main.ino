@@ -104,7 +104,7 @@ int getTurnDirection(){
   int turn = -1;
   // TODO:: flip the signs if the servo reacts opposite to expected.
   if( adcReadLeft > adcReadRight) {
-    turn =  ( ( adcReadLeft - adcReadRight ) / adcReadRight) * 90
+    turn =  ( ( adcReadLeft - adcReadRight ) / adcReadLeft) * 90
   }
   else if(adcReadLeft < adcReadRight) {
     turn = 90 + ( ( adcReadLeft - adcReadRight ) / adcReadRight) * (90)
