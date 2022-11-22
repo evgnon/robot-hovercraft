@@ -101,7 +101,7 @@ int getTurnDirection(){
   uint16_t adcReadLeft = analogRead(PC1); // port 8
 
   uint16_t adcReadRight = analogRead(PC2); // port 14
-  int turn = 0;
+  int turn = -1;
   // TODO:: flip the signs if the servo reacts opposite to expected.
   if( adcReadLeft > adcReadRight) {
     turn =  ( ( adcReadLeft - adcReadRight ) / adcReadRight) * 90
@@ -109,7 +109,14 @@ int getTurnDirection(){
   else if(adcReadLeft < adcReadRight) {
     turn = 90 + ( ( adcReadLeft - adcReadRight ) / adcReadRight) * (90)
   }
-  return turn;
+  // If it's lower than 10 degrees, we probably don't care.
+  if(turn >= 10 ){
+    return turn;
+  }
+  else {
+    return 0;
+  }
+  
 }
 
 void loop() {
