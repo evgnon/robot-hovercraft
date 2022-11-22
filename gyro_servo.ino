@@ -11,6 +11,7 @@ long prev_gyro_x = 0, prev_gyro_y = 0, prev_gyro_z = 0;
 long gyro_callibrate_x = 0, gyro_callibrate_y = 0, gyro_callibrate_z = 0;
 float ang_vel_x, ang_vel_y, ang_vel_z; 
 long roll = 0, pitch = 0, yaw = 0; // x, y, z
+long curr_yaw = 0;
 
 // Time values
 float elapsed_time = 0, current_time = 0, previous_time = 0;
@@ -18,36 +19,44 @@ float elapsed_time = 0, current_time = 0, previous_time = 0;
 // Initialize Servo
 Servo hover_servo;
 
-// Servo yaw value
-long convert_yaw;
+// Servo angles
+long prev_angle;
+long new_angle = 90;
 
-void setup() {
-  Serial.begin(9600); //starts the serial at 9600 baud rate
-  gpio_init();
-  DDRC|=(1<<PC1); // Set pin to output
-  DDRB|=(1<<PB5)|(1<<PB0); // set the pin as output
-  pinMode(PB5, OUTPUT);
-  pinMode(PD3, OUTPUT);
+// Store led_brightness calculation in here
+long led_brightness;
+
+#define BOARD_LED 11
+
+// void setup() {
+//   Serial.begin(9600); //starts the serial at 9600 baud rate
+//   gpio_init();
+//   DDRC|=(1<<PC1); // Set pin to output
+//   DDRB|=(1<<PB5)|(1<<PB0); // set the pin as output
+//   pinMode(LED_BUILTIN, OUTPUT);
+//   digitalWrite(LED_BUILTIN, LOW);
+//   pinMode(BOARD_LED, OUTPUT);
+//   // digitalWrite(BOARD_LED, LOW);
     
-  // IMU
-  Wire.begin();
-  setupIMU(); // initialize connection to imu
-  callibrateGyro(); // make sure gyro is properly calibrated
-  current_time = millis();
+//   // IMU
+//   Wire.begin();
+//   setupIMU(); // initialize connection to imu
+//   callibrateGyro(); // make sure gyro is properly calibrated
+//   current_time = millis();
 
-  // SERVO
-  hover_servo.attach(9, 1000, 2000); // set servo to go from 0 to 180 degrees
-  hover_servo.write(1500); // set servo to neutral position facing forward
-}
+//   // SERVO
+//   hover_servo.attach(9, 1000, 2000); // set servo to go from 0 to 180 degrees
+//   hover_servo.write(1500); // set servo to neutral position facing forward
+// }
 
-void loop() {
-  updateAccel();
-  updateGyro();
-  LEDL();
-  moveServo();
-  printCurrent();
-  delay(1000);
-}
+// void loop() {
+//   updateAccel();
+//   updateGyro();
+//   controlLED();
+//   moveServo(yawAngle());
+//   printCurrent();
+//   delay(100);
+// }
 
 
 // Setup IMU
@@ -68,6 +77,7 @@ void setupIMU() {
   Wire.beginTransmission(0b1101000); // starts communication
   Wire.write(0x1B); // Communicates with gyro configuration register
   Wire.write(0b00000000); // sets to 0 -> +-250 deg/s
+  // Wire.write(0b11); // +- 2000
   Wire.endTransmission();
 
   /*
@@ -156,7 +166,7 @@ void getGyro() {
   Wire.endTransmission();
 
   Wire.requestFrom(0b1101000, 6); // Request readings from bits 43-48
-  while (Wire.available() < 6); // while loop AKA awaits all 6 bits
+  // while (Wire.available() < 6); // while loop AKA awaits all 6 bits
   // store 2 bytes into each parameter
   gyro_x = Wire.read()<<8|Wire.read();
   gyro_y = Wire.read()<<8|Wire.read();
@@ -175,6 +185,10 @@ void getAngVelocity() {
   ang_vel_x = gyro_x / 131.0;
   ang_vel_y = gyro_y / 131.0;
   ang_vel_z = gyro_z / 131.0;
+
+  // ang_vel_x = gyro_x / 16.4;
+  // ang_vel_y = gyro_y / 16.4;
+  // ang_vel_z = gyro_z / 16.4;
 }
 
 void getAngle() {
@@ -188,25 +202,70 @@ void getAngle() {
 /*
   IMPORTANT: servo cannot move in negative angle values. We want range yaw +- 90 degrees, so convert yaw value to match.
 */
-void moveServo() {
-  // convert yaw value
-  convert_yaw = yaw + 90;
-
-  // check if yaw is within the range -90 <= yaw <= 90
-  if (-90 <= yaw <= 90) {
-    hover_servo.write(convert_yaw);
+float yawAngle(float angle) {
+  if (angle > 90) {
+    return angle = 90;
+  } else if (angle < -90) {
+    return angle = -90;
+  } else {
+    return angle;
   }
 }
 
-// control LED_BUILTIN = LEDL
-void LEDL() {
+// function to move servo to a specific angle
+void moveServo(float angle) {
+  prev_angle = new_angle;
+  new_angle = 90 + angle;
+
+  if (0 <= new_angle <= 180) {  
+    if (new_angle < prev_angle) {
+      for (int i = prev_angle; i >= new_angle; i--) {
+        hover_servo.write(i);
+        delay(5);
+      }
+    } else if (new_angle > prev_angle) {
+      for (int i = prev_angle; i <= new_angle; i++) {
+        hover_servo.write(i);
+        delay(5);
+      }
+    }
+  }
+  Serial.print("Rotation angle: ");
+  Serial.print(new_angle);
+  Serial.println(" degrees");
+}
+
+// control LED_BUILTIN & D3
+/*
+  LED_BUILTIN must turn on when yaw is outside of the +- 90 range
+  D3 must be ON when acceleration in the X-axis is > +-1.00 g
+        & be OFF when acceleration in the X-axis is < +- 0.01g -> -0.01 < g_x < 0.01
+*/
+void controlLED() {
+  // control LED_BUILTIN
   if (yaw < -90 || yaw > 90) {
     digitalWrite(LED_BUILTIN, HIGH);
   }
   else {
     digitalWrite(LED_BUILTIN, LOW);
   }
+
+  // control D3
+  if (-0.01 < g_x < 0.01) {
+    analogWrite(BOARD_LED, 255);    
+  }
+  else if ((g_x < -1.00) || (g_x > 1.00)) {
+    analogWrite(BOARD_LED, 0);
+  }
+  else {
+    // brightness of LED is in a range of 0-255, with 0 being off and 255 being on
+    led_brightness = round(1-(g_x * 255));
+    analogWrite(BOARD_LED, led_brightness);
+    Serial.println(led_brightness);
+  }
+
 }
+
 
 // PRINTING
 void printCurrent() {
@@ -229,7 +288,7 @@ void printCurrent() {
   Serial.print(g_z);
   Serial.println(" g\n");
 
-  Serial.print("Servo angle:");
+  Serial.print("Servo angle: ");
   Serial.print(hover_servo.read());
   Serial.println(" deg\n\n");
   }
