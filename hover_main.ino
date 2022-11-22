@@ -97,28 +97,33 @@ void setup() {
 
 double UNIT_TO_VOLTAGE = 0.0049;
 
+int getTurnDirection(){
+  uint16_t adcReadLeft = analogRead(PC1); // port 8
+
+  uint16_t adcReadRight = analogRead(PC2); // port 14
+  int turn = -1;
+  // TODO:: flip the signs if the servo reacts opposite to expected.
+  if( adcReadLeft > adcReadRight) {
+    turn =  ( ( adcReadLeft - adcReadRight ) / adcReadLeft) * 90
+  }
+  else if(adcReadLeft < adcReadRight) {
+    turn = 90 + ( ( adcReadLeft - adcReadRight ) / adcReadRight) * (90)
+  }
+  // If it's lower than 10 degrees, we probably don't care.
+  if(turn >= 10 ){
+    return turn;
+  }
+  else {
+    return 0;
+  }
+  
+}
+
 void loop() {
-  
-  // US SENSOR -> to discard
-  /*
-    PORTB&=~(1<<TrigPin); // end of the pulse 
-    _delay_us(2); // delay for the pulse
-    PORTB|=(1<<TrigPin); //start of the pulse
-  _delay_us(10); // delay for the pulse
-   PORTB&=~(1<<TrigPin); // end of the pulse 
-
-   long duration = pulseIn(EchoPin,HIGH);
-   Serial.println(duration);
-   long distance = duration * 0.034 / 2;
-   Serial.print("Distance: ");
-  Serial.print(distance);
-  Serial.println(" cm");
-  */
-  
-
     // READING VOLTAGE FOR IR SENSOR
-    
-  // uint16_t value = analogRead(PC1);
+    read
+  
+
   // Serial.print(UNIT_TO_VOLTAGE*value);
   // Serial.println(" V");
   
@@ -155,7 +160,7 @@ void loop() {
   
     timer = millis();
   }
-  _delay_ms(500);
+  _delay_ms(50);
   
 }
 uint16_t adcToCm (uint16_t x) {
