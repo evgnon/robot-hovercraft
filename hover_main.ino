@@ -98,9 +98,9 @@ void setup() {
 double UNIT_TO_VOLTAGE = 0.0049;
 
 int getTurnDirection(){
-  uint16_t adcReadLeft = analogRead(PC1);
+  uint16_t adcReadLeft = analogRead(PC1); // port 8
 
-  uint16_t adcReadRight = analogRead(PC); // TODO:: change to other IR pin
+  uint16_t adcReadRight = analogRead(PC2); // port 14
   int turn = 0;
   // TODO:: flip the signs if the servo reacts opposite to expected.
   if( adcReadLeft > adcReadRight) {
