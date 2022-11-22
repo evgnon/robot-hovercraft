@@ -40,16 +40,6 @@ void setup() {
   hover_servo.write(1500); // set servo to neutral position facing forward
 }
 
-void loop() {
-  updateAccel();
-  updateGyro();
-  LEDL();
-  moveServo();
-  printCurrent();
-  delay(1000);
-}
-
-
 // Setup IMU
 void setupIMU() {
   Wire.beginTransmission(0b1101000); // starts communication
@@ -206,6 +196,15 @@ void LEDL() {
   else {
     digitalWrite(LED_BUILTIN, LOW);
   }
+}
+
+void loop() {
+  updateAccel();
+  updateGyro();
+  LEDL();
+  moveServo();
+  printCurrent();
+  delay(1000);
 }
 
 // PRINTING
