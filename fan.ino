@@ -17,7 +17,7 @@ void setupFan(uint8_t pin_name) {
 
 
 
-void fanWork(uint8_t pin_name) {
+void fanWork(uint8_t pin_name, uint8_t max_fan) {
   if (Serial.available() > 0) {    // is a character available?
     rx_byte = Serial.read();       // get the character
   
@@ -29,7 +29,7 @@ void fanWork(uint8_t pin_name) {
     else if (rx_byte == '\n') {
       Serial.print("Received: ");
       Serial.println(input);
-      if(input.toInt() < 256) {
+      if(input.toInt() < max_fan) {
         fanSpeed = input.toInt();
         EEPROM.put(FS_ADDR, fanSpeed);
       } else {
@@ -43,3 +43,10 @@ void fanWork(uint8_t pin_name) {
   } // end: if (Serial.available() > 0)
   analogWrite(pin_name, fanSpeed);
 }
+
+// function to control speed of fan depending on IMU
+// int turnFanSpeed() {
+//   if getYaw() <
+
+//   return fan_speed;
+// }
