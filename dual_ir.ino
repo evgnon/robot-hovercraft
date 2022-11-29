@@ -12,19 +12,17 @@ float distance_right;
 float read_left;
 float read_right;
 
-float prop_control = 90;
+float prop_control = 0;
 
-float turn(float adcReadLeft, float adcReadRight) {
+int turn(float adcReadLeft, float adcReadRight) {
   float turn;
 
-  // // check if difference between both distances is larger than 5 cm
-  // if (((adcReadLeft - adcReadRight) < -5.00) || ((adcReadLeft - adcReadRight) > 5.00)) {
+  if (adcReadLeft > adcReadRight) {
+    return -(1-(adcReadRight / adcReadLeft)) * 90.00;
+  }
+  else if (adcReadLeft < adcReadRight) {
+    return ((1-(adcReadLeft / adcReadRight)) * 90.00);
+  }
+  
 
-    if (adcReadLeft > adcReadRight) {
-      return (1-(adcReadRight / adcReadLeft)) * 90.00;
-    }
-    else if (adcReadLeft < adcReadRight) {
-      return -((1-(adcReadLeft / adcReadRight))* 90.00);
-    }
-  //}
 }
