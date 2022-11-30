@@ -4,10 +4,11 @@ void setup() {
   // fan TO FINISH
 
   // TODO: replace with the following two lines:
-  // analogWrite(lift_pin, 255);
-  // analogWrite(prop_pin, 255);
-  setupFan(lift_pin);
-  setupFan(prop_pin);
+  pinMode(lift_pin, 0x1);
+  analogWrite(lift_pin, 255);cd 
+  pinMode(prop_pin, 0x1);
+  //setupFan(lift_pin);
+  //setupFan(prop_pin);
 
   Serial.begin(9600); //starts the serial at 9600 baud rate
   gpio_init();
@@ -21,6 +22,16 @@ void setup() {
   // SERVO
   hover_servo.attach(9, 1000, 2000); // set servo to go from 0 to 180 degrees
   hover_servo.write(1500); // set servo to neutral position facing forward
+}
+
+void backFanCTL(double turnAngle) {\
+// Try setting a turn maximum. It may help us not lose momentum.
+  if(turnAngle > 30) {
+    return;
+  }
+  // Then do progressive speed decrease when turning
+  // for a turn of 30 degrees we would have a speed set to 85.
+  analogWrite(prop_pin, 255 / (turnAngle*10))
 }
 
 void loop() {
@@ -40,6 +51,7 @@ void loop() {
 
   // Check for location
   prop_control = turn(distance_left, distance_right);
+  backFanCTL(prop_control)
 
   // check for yaw -> if isCentered returns false, then moveServo
   // move servo according to angle
